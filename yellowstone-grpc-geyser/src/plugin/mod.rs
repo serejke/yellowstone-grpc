@@ -1,8 +1,9 @@
-pub mod convert_from;
 pub mod convert_to;
 pub mod entry;
 pub mod filter;
 pub mod message;
+
+pub use yellowstone_grpc_convert::convert_from;
 
 pub mod proto {
     #![allow(clippy::clone_on_ref_ptr)]

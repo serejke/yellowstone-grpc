@@ -10,6 +10,11 @@ The minor version will be incremented upon a breaking change and the patch versi
 
 ## [Unreleased]
 
+### Misc
+
+- Extracted `convert_from`/`convert_to` from `yellowstone-grpc-geyser` into a new internal `yellowstone-grpc-convert` crate (`publish = false`) so the napi binding can reuse the proto conversions without depending on the plugin crate; `yellowstone-grpc-geyser` re-exports both modules at their old paths ([#867](https://github.com/rpcpool/yellowstone-grpc/issues/867))
+- napi: `encode_tx`/`encode_deshred_tx` call `yellowstone-grpc-convert` directly instead of re-serializing the proto message and re-parsing it as agave's `solana-storage-proto` twin type. Drops `solana-storage-proto` from the napi dependencies and a protobuf round trip per transaction
+
 ## 2026-08-31
 
 - yellowstone-grpc-geyser 15.2.1

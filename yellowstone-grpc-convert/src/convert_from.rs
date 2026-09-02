@@ -385,7 +385,18 @@ pub fn create_account(
 
 #[cfg(test)]
 mod tests {
-    use {super::create_tx_meta, yellowstone_grpc_proto::prelude as proto};
+    use {
+        super::{create_message, create_tx_meta},
+        crate::convert_to,
+        solana_hash::Hash,
+        solana_message::{
+            compiled_instruction::CompiledInstruction,
+            v1::{Message as MessageV1, TransactionConfig},
+            MessageHeader, VersionedMessage,
+        },
+        solana_pubkey::Pubkey,
+        yellowstone_grpc_proto::prelude as proto,
+    };
 
     fn base_proto_meta() -> proto::TransactionStatusMeta {
         proto::TransactionStatusMeta {
@@ -420,5 +431,36 @@ mod tests {
 
         assert_eq!(meta.inner_instructions, Some(vec![]));
         assert_eq!(meta.log_messages, Some(log_messages));
+    }
+
+    #[test]
+    fn v1_message_round_trips_with_config() {
+        let message = VersionedMessage::V1(MessageV1 {
+            header: MessageHeader {
+                num_required_signatures: 1,
+                num_readonly_signed_accounts: 0,
+                num_readonly_unsigned_accounts: 1,
+            },
+            config: TransactionConfig {
+                priority_fee: Some(1_000),
+                compute_unit_limit: Some(200_000),
+                loaded_accounts_data_size_limit: Some(32 * 1024),
+                heap_size: Some(64 * 1024),
+            },
+            lifetime_specifier: Hash::new_from_array([7; 32]),
+            account_keys: vec![
+                Pubkey::new_from_array([1; 32]),
+                Pubkey::new_from_array([2; 32]),
+            ],
+            instructions: vec![CompiledInstruction {
+                program_id_index: 1,
+                accounts: vec![0],
+                data: vec![1, 2, 3],
+            }],
+        });
+
+        let round_tripped =
+            create_message(convert_to::create_message(&message)).expect("failed to create message");
+        assert_eq!(round_tripped, message);
     }
 }
